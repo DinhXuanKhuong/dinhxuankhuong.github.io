@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Notation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- MathJax for LaTeX rendering -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)'], ['$', '$']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root { --fg: #1f2937; --muted:#4b5563; --accent:#111827; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol"; color: var(--fg); line-height: 1.6; margin: 2rem auto; max-width: 900px; padding: 0 1rem; }
+    h1, h2 { line-height: 1.25; color: var(--accent); }
+    h1 { font-size: 2rem; margin-top: 0; }
+    h2 { font-size: 1.5rem; margin-top: 2rem; }
+    p { margin: 1rem 0; }
+    ul { padding-left: 1.25rem; }
+    li { margin: .25rem 0; }
+    code, kbd, samp { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.95em; }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .note { color: var(--muted); }
+    hr { border: 0; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
+  </style>
+</head>
+<body>
+
+  <h1 id="chap_notation">Notation</h1>
+
+  <p>
+    Throughout this book, we adhere to the following notational conventions.
+    Note that some of these symbols are placeholders, while others refer to
+    specific objects. As a general rule of thumb, the indefinite article “a”
+    often indicates that the symbol is a placeholder and that similarly
+    formatted symbols can denote other objects of the same type. For example,
+    “\(x\): a scalar” means that lowercased letters generally represent scalar
+    values, but “\(\mathbb{Z}\): the set of integers” refers specifically to
+    the symbol \(\mathbb{Z}\).
+  </p>
+
+  <h2>Numerical Objects</h2>
+  <ul>
+    <li>\(x\): a scalar</li>
+    <li>\(\mathbf{x}\): a vector</li>
+    <li>\(\mathbf{X}\): a matrix</li>
+    <li>\(\mathsf{X}\): a general tensor</li>
+    <li>\(\mathbf{I}\): the identity matrix (of some given dimension),
+      i.e., a square matrix with \(1\) on all diagonal entries and \(0\) on all off-diagonals</li>
+    <li>\(x_i\), \([\mathbf{x}]_i\): the \(i^{\textrm{th}}\) element of vector \(\mathbf{x}\)</li>
+    <li>\(x_{ij}\), \(x_{i,j}\), \([\mathbf{X}]_{ij}\), \([\mathbf{X}]_{i,j}\): the element of matrix \(\mathbf{X}\) at row \(i\) and column \(j\)</li>
+  </ul>
+
+  <h2>Set Theory</h2>
+  <ul>
+    <li>\(\mathcal{X}\): a set</li>
+    <li>\(\mathbb{Z}\): the set of integers</li>
+    <li>\(\mathbb{Z}^+\): the set of positive integers</li>
+    <li>\(\mathbb{R}\): the set of real numbers</li>
+    <li>\(\mathbb{R}^n\): the set of \(n\)-dimensional vectors of real numbers</li>
+    <li>\(\mathbb{R}^{a\times b}\): the set of matrices of real numbers with \(a\) rows and \(b\) columns</li>
+    <li>\(|\mathcal{X}|\): cardinality (number of elements) of set \(\mathcal{X}\)</li>
+    <li>\(\mathcal{A}\cup\mathcal{B}\): union of sets \(\mathcal{A}\) and \(\mathcal{B}\)</li>
+    <li>\(\mathcal{A}\cap\mathcal{B}\): intersection of sets \(\mathcal{A}\) and \(\mathcal{B}\)</li>
+    <li>\(\mathcal{A}\setminus\mathcal{B}\): set subtraction of \(\mathcal{B}\) from \(\mathcal{A}\) (contains only those elements of \(\mathcal{A}\) that do not belong to \(\mathcal{B}\))</li>
+  </ul>
+
+  <h2>Functions and Operators</h2>
+  <ul>
+    <li>\(f(\cdot)\): a function</li>
+    <li>\(\log(\cdot)\): the natural logarithm (base \(e\))</li>
+    <li>\(\log_2(\cdot)\): logarithm to base \(2\)</li>
+    <li>\(\exp(\cdot)\): the exponential function</li>
+    <li>\(\mathbf{1}(\cdot)\): the indicator function; evaluates to \(1\) if the boolean argument is true, and \(0\) otherwise</li>
+    <li>\(\mathbf{1}_{\mathcal{X}}(z)\): the set-membership indicator function; evaluates to \(1\) if the element \(z\) belongs to the set \(\mathcal{X}\) and \(0\) otherwise</li>
+    <li>\(\mathbf{(\cdot)}^\top\): transpose of a vector or a matrix</li>
+    <li>\(\mathbf{X}^{-1}\): inverse of matrix \(\mathbf{X}\)</li>
+    <li>\(\odot\): Hadamard (elementwise) product</li>
+    <li>\([\cdot, \cdot]\): concatenation</li>
+    <li>\(\|\cdot\|_p\): \(\ell_p\) norm</li>
+    <li>\(\|\cdot\|\): \(\ell_2\) norm</li>
+    <li>\(\langle \mathbf{x}, \mathbf{y} \rangle\): inner (dot) product of vectors \(\mathbf{x}\) and \(\mathbf{y}\)</li>
+    <li>\(\sum\): summation over a collection of elements</li>
+    <li>\(\prod\): product over a collection of elements</li>
+    <li>\(\stackrel{\textrm{def}}{=}\): an equality asserted as a definition of the symbol on the left-hand side</li>
+  </ul>
+
+  <h2>Calculus</h2>
+  <ul>
+    <li>\(\frac{dy}{dx}\): derivative of \(y\) with respect to \(x\)</li>
+    <li>\(\frac{\partial y}{\partial x}\): partial derivative of \(y\) with respect to \(x\)</li>
+    <li>\(\nabla_{\mathbf{x}} y\): gradient of \(y\) with respect to \(\mathbf{x}\)</li>
+    <li>\(\int_a^b f(x)\,dx\): definite integral of \(f\) from \(a\) to \(b\) with respect to \(x\)</li>
+    <li>\(\int f(x)\,dx\): indefinite integral of \(f\) with respect to \(x\)</li>
+  </ul>
+
+  <h2>Probability and Information Theory</h2>
+  <ul>
+    <li>\(X\): a random variable</li>
+    <li>\(P\): a probability distribution</li>
+    <li>\(X \sim P\): the random variable \(X\) follows distribution \(P\)</li>
+    <li>\(P(X = x)\): the probability assigned to the event where random variable \(X\) takes value \(x\)</li>
+    <li>\(P(X \mid Y)\): the conditional probability distribution of \(X\) given \(Y\)</li>
+    <li>\(p(\cdot)\): a probability density function (PDF) associated with distribution \(P\)</li>
+    <li>\(\mathbb{E}[X]\): expectation of a random variable \(X\)</li>
+    <li>\(X \perp Y\): random variables \(X\) and \(Y\) are independent</li>
+    <li>\(X \perp Y \mid Z\): random variables \(X\) and \(Y\) are conditionally independent given \(Z\)</li>
+    <li>\(\sigma_X\): standard deviation of random variable \(X\)</li>
+    <li>\(\mathrm{Var}(X)\): variance of random variable \(X\), equal to \(\sigma^2_X\)</li>
+    <li>\(\mathrm{Cov}(X, Y)\): covariance of random variables \(X\) and \(Y\)</li>
+    <li>\(\rho(X, Y)\): the Pearson correlation coefficient between \(X\) and \(Y\), equals \(\frac{\mathrm{Cov}(X, Y)}{\sigma_X \sigma_Y}\)</li>
+    <li>\(H(X)\): entropy of random variable \(X\)</li>
+    <li>\(D_{\textrm{KL}}(P\|Q)\): the KL-divergence (or relative entropy) from distribution \(Q\) to distribution \(P\)</li>
+  </ul>
+
+  <hr />
+
+</body>
+</html>
