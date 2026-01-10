@@ -4,51 +4,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dinh Xuan Khuong</title>
+    <meta name="description" content="Personal site: blog, achievements, memories, and wishlist." />
+    <link rel="stylesheet" href="assets/site.css" />
 </head>
 <body>
-    <nav>
-        <ul>
-            <li> <a href="">Home</a></li>
-            <li> <a href="">About</a></li>
-            <li> <a href="">Contact</a></li>
-            <li> <a href="">Project</a></li>
-            <li> <a href="d2lbook.html"> My deep learning journey</a></li>
-        </ul>
-    </nav>
-    <header>
-        <h1>Dinh Xuan Khuong</h1>
-        <h2>Welcome to my personal project</h2>
-        <a href="">Learn more</a>
-        <section>
-            <img src="images/TT.jpg" height="200px" alt="The man in the center">
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <div class="brand">
+                <div class="brand-mark" aria-hidden="true"></div>
+                <a href="index.html">Dinh Xuan Khuong</a>
+            </div>
+            <nav class="nav" aria-label="Primary">
+                <a href="index.html">Home</a>
+                <a href="blog.html">Blog</a>
+                <a href="projects.html">Projects</a>
+                <a href="achievements.html">Achievements</a>
+                <a href="memories.html">Memories</a>
+                <a href="wishlist.html">Wishlist</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main id="content" class="container">
+        <section class="hero" aria-label="Intro">
+            <div>
+                <h1>Dinh Xuan Khuong</h1>
+                <p>
+                    I write about what I learn, share achievements, keep memories, and track a wishlist of goals.
+                </p>
+                <div class="button-row">
+                    <a class="btn primary" href="blog.html">Read the blog</a>
+                    <a class="btn" href="achievements.html">Achievements</a>
+                    <a class="btn" href="memories.html">Memories</a>
+                </div>
+
+                <div class="badges" aria-label="Topics">
+                    <span class="badge">Deep learning</span>
+                    <span class="badge">Programming</span>
+                    <span class="badge">Photography</span>
+                    <span class="badge">Personal growth</span>
+                </div>
+            </div>
+
+            <aside class="hero-card" aria-label="Profile">
+                <img class="avatar" src="images/TT.jpg" alt="Portrait of Khuong" />
+                <div class="small">
+                    <a href="about.html">About me</a> · <a href="contact.html">Contact</a>
+                </div>
+            </aside>
         </section>
 
-    </header>
-    <section>
-        <h1>Follow me</h1>
-        <ol>
-            <li><a href="https://www.youtube.com/@KhuongTuNhien">Youtube</a></li>
-            <li><a href="https://leetcode.com/xuankhuongw/">Leetcode</a></li>
-            <li><a href="https://github.com/DinhXuanKhuong">Github</a></li>
-        </ol>
-    </section>
-    <a href="anotherpage.html">Check out my cool site</a>
-    <section>Check out my photography below:</section>
-    <img src="images/TT1.jpg" height="200px" alt="">
-    <img src="images/TT2.jpg" height="200px" alt="">
-    <img src="images/TT3.jpg" height="200px" alt="">
-    <img src="images/TT5.jpg" height="200px" alt="">
+        <section class="grid" aria-label="Highlights">
+            <article class="card">
+                <div class="kicker">Start here</div>
+                <h2>Learning notes</h2>
+                <p>Short notes and write-ups about what I’m learning.</p>
+                <p><a class="btn" href="blog.html">Open Blog</a></p>
+            </article>
 
-    <form>
-        <input type="text" placeholder="Name">
-        <input type="email" placeholder="Email">
-        <input type="password" placeholder="Password">
-        <button>Submit</button>
-    </form>
+            <article class="card">
+                <div class="kicker">Projects</div>
+                <h2>My GitHub repos</h2>
+                <p>Live list of public repos (auto-loaded from GitHub).</p>
+                <p><a class="btn" href="projects.html">Open Projects</a></p>
+            </article>
 
-    
+            <article class="card">
+                <div class="kicker">Latest</div>
+                <h2>Newest post</h2>
+                <p><a href="posts/2026-01-10-welcome.html">Welcome — why I’m writing</a></p>
+                <p class="small">A quick intro to what I’ll share here.</p>
+            </article>
+        </section>
 
+        <section class="container prose" aria-label="Photography" style="padding: 0;">
+            <h2>Photography</h2>
+            <p class="kicker">A few favorites. More on the Memories page.</p>
+        </section>
 
-    
+        <section class="grid" aria-label="Photo grid">
+            <figure class="figure">
+                <img src="images/TT1.jpg" alt="Photo 1" />
+                <figcaption>Caption (edit me).</figcaption>
+            </figure>
+            <figure class="figure">
+                <img src="images/TT2.jpg" alt="Photo 2" />
+                <figcaption>Caption (edit me).</figcaption>
+            </figure>
+            <figure class="figure">
+                <img src="images/TT3.jpg" alt="Photo 3" />
+                <figcaption>Caption (edit me).</figcaption>
+            </figure>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="small">© <span id="year"></span> Dinh Xuan Khuong</div>
+            <div class="small"><a href="blog.html">Blog</a> · <a href="wishlist.html">Wishlist</a></div>
+        </div>
+    </footer>
+
+    <script src="assets/site.js"></script>
 </body>
 </html>
