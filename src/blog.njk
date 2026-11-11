@@ -1,0 +1,21 @@
+---
+layout: layouts/base.njk
+title: "Blog"
+navKey: blog
+permalink: /blog.html
+description: "Learning notes, project write-ups, and personal reflections by Dinh Xuan Khuong."
+---
+<div class="page-intro">
+  <p class="eyebrow">The notebook</p><h1>Blog</h1>
+  <p class="lead">Learning in public, one idea at a time.</p>
+</div>
+<section class="split-section">
+  <div><p class="eyebrow">The archive</p><h2>Writing</h2><p class="section-note">Notes, experiments, and reflections collected along the way.</p></div>
+  <div class="section-body">
+    {% for entry in collections.posts %}
+      {% include "partials/entry.njk" %}
+    {% else %}
+    <div class="empty-state"><h3>More to come.</h3><p>New writing will appear here.</p></div>
+    {% endfor %}
+  </div>
+</section>

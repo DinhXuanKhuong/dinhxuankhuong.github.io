@@ -1,0 +1,22 @@
+---
+layout: layouts/base.njk
+title: "Poems"
+navKey: poems
+permalink: /poems.html
+description: "Poetry by Dinh Xuan Khuong (Joey). A space for love poems and personal reflections."
+---
+<div class="page-intro">
+  <p class="eyebrow">Beyond the research</p><h1>Poems</h1>
+  <p class="lead">A place for love poems and the things I find easier to say in verse.</p>
+</div>
+<section class="split-section">
+  <div><p class="eyebrow">The collection</p><h2>Poetry &amp; reflections</h2><p class="section-note">A quieter corner of my personal archive.</p></div>
+  <div class="section-body">
+    {% set entryLabel = "Read the poem →" %}
+    {% for entry in collections.poems %}
+      {% include "partials/entry.njk" %}
+    {% else %}
+    <div class="empty-state"><h3>Poems to come.</h3><p>I enjoy writing poetry, especially love poems. I’ll share them here soon.</p></div>
+    {% endfor %}
+  </div>
+</section>

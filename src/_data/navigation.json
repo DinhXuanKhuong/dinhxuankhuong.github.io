@@ -1,0 +1,32 @@
+[
+  {
+    "key": "home",
+    "label": "Home",
+    "url": "/index.html"
+  },
+  {
+    "key": "blog",
+    "label": "Blog",
+    "url": "/blog.html"
+  },
+  {
+    "key": "poems",
+    "label": "Poems",
+    "url": "/poems.html"
+  },
+  {
+    "key": "projects",
+    "label": "Projects",
+    "url": "/projects.html"
+  },
+  {
+    "key": "publications",
+    "label": "Publications",
+    "url": "/publications.html"
+  },
+  {
+    "key": "life-goals",
+    "label": "Life Goals",
+    "url": "/life-goals.html"
+  }
+]

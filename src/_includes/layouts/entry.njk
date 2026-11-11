@@ -1,0 +1,15 @@
+---
+layout: layouts/base.njk
+---
+<article class="reading">
+  <p class="eyebrow"><time datetime="{{ page.date | isoDate }}">{{ page.date | readableDate }}</time>{% if category %} · {{ category }}{% endif %}</p>
+  <h1>{{ title }}</h1>
+  {% if kind == "projects" %}
+  <div class="project-resources">
+    {% if repository %}<a class="button" href="{{ repository }}">GitHub repository ↗</a>{% endif %}
+    {% if demo %}<a class="button" href="{{ demo }}">Live demo ↗</a>{% endif %}
+  </div>
+  {% endif %}
+  <div{% if kind == "poems" %} class="poem-body"{% endif %}>{{ content | safe }}</div>
+  <a class="text-link" href="{{ archiveUrl }}">← {{ archiveLabel }}</a>
+</article>

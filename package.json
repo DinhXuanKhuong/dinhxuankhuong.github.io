@@ -1,0 +1,19 @@
+{
+  "name": "khuong-personal-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/clean.mjs && eleventy --serve --port=8000",
+    "build": "node scripts/clean.mjs && eleventy",
+    "check": "npm run build && node scripts/check-site.mjs",
+    "new": "node scripts/new-content.mjs",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.2"
+  }
+}

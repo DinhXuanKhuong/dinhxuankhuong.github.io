@@ -579,3 +579,50 @@ footer small {
 .research-interests li + li {
   margin-top:12px;
 }
+
+.archive-entry + .archive-entry {
+  border-top:1px solid var(--rule);
+  margin-top:28px;
+  padding-top:28px;
+}
+
+.project-resources {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px 20px;
+  margin-bottom:20px;
+}
+
+.paper-card .project-resources {
+  margin-bottom:0;
+}
+
+.poem-body p {
+  white-space:pre-line;
+}
+
+.reading img {
+  max-width:100%;
+  height:auto;
+}
+
+.reading pre {
+  padding:18px;
+  background:var(--tint);
+  overflow-x:auto;
+  font:13px/1.7 var(--mono);
+}
+
+.reading :not(pre) > code {
+  font:0.8em var(--mono);
+  background:var(--tint);
+  padding:2px 4px;
+  overflow-wrap:anywhere;
+}
+
+.reading blockquote {
+  border-left:2px solid var(--rule);
+  margin-inline:0;
+  padding-left:24px;
+  color:var(--slate);
+}

@@ -1,0 +1,8 @@
+<header class="site-header container">
+  <a class="brand" href="/index.html"><span>{{ site.name }}</span><small>{{ site.tagline }}</small></a>
+  <nav aria-label="Primary">
+    {% for item in navigation %}
+    <a href="{{ item.url }}"{% if navKey == item.key %} aria-current="page"{% endif %}>{{ item.label }}</a>
+    {% endfor %}
+  </nav>
+</header>

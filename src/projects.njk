@@ -1,0 +1,33 @@
+---
+layout: layouts/base.njk
+title: "Projects & Code"
+navKey: projects
+permalink: /projects.html
+description: "Projects and code by Dinh Xuan Khuong."
+---
+<div class="page-intro">
+  <p class="eyebrow">Code &amp; experiments</p><h1>Projects &amp; Code</h1>
+  <p class="lead">A collection of repositories, experiments, and things built along the way.</p>
+</div>
+<section class="split-section">
+  <div><p class="eyebrow">Selected repositories</p><h2>On the workbench</h2><p class="section-note">Exploring ideas through implementation.</p></div>
+  <div class="section-body">
+    {% for entry in collections.projects %}
+    <article class="paper-card">
+      <p class="eyebrow">{{ entry.data.category }}</p>
+      <h3><a href="{{ entry.url }}">{{ entry.data.title }}</a></h3>
+      <p>{{ entry.data.description }}</p>
+      <div class="project-resources">
+        <a class="text-link" href="{{ entry.url }}">Read about the project →</a>
+        {% if entry.data.repository %}<a class="text-link" href="{{ entry.data.repository }}">[GitHub repository ↗]</a>{% endif %}
+      </div>
+    </article>
+    {% else %}
+    <div class="empty-state"><h3>More to come.</h3><p>New projects will appear here.</p></div>
+    {% endfor %}
+  </div>
+</section>
+<section class="split-section">
+  <div><p class="eyebrow">Open source</p><h2>More on GitHub</h2></div>
+  <div class="section-body"><p>The rest of my code lives on GitHub.</p><a class="button" href="{{ site.github }}?tab=repositories">Browse repositories ↗</a></div>
+</section>
