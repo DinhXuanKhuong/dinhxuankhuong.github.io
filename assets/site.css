@@ -183,7 +183,6 @@ p:last-child {
   height:340px;
   object-fit:cover;
   object-position:53% center;
-  filter:grayscale(1);
 }
 
 figcaption {
@@ -511,7 +510,7 @@ footer small {
   }
   .portrait img {
     height:auto;
-    aspect-ratio:3/2;
+    aspect-ratio:1/1;
     object-fit:cover;
   }
   .coordinates {
