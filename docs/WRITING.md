@@ -68,6 +68,8 @@ Bắt đầu sau một dòng trống
 
 Each line stays on its own line; a blank line starts a new stanza. Vietnamese characters are supported in titles and text. Use `language: vi` for Vietnamese poems or `language: en` for English (the default). Published poems appear on the Poems page, newest first, and each has its own page.
 
+To feature a published poem in the homepage’s **Selected poem** section, add `featured: true` to its front matter. Remove that field to stop featuring it.
+
 ## Project
 
 Create `src/content/projects/my-project.md`:

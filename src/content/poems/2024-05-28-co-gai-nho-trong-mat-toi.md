@@ -3,6 +3,7 @@ title: "Cô gái nhỏ trong mắt tôi"
 date: 2024-05-28
 description: "Cô mãi nhỏ mà thôi"
 category: Poetry
+featured: true
 draft: false
 ---
 

@@ -27,15 +27,22 @@ description: "Dinh Xuan Khuong (Joey), final-year student at the University of S
   <div class="section-body"><ul class="research-interests"><li>Large Language Models</li><li>Speech Language Models</li><li>Multimodal Learning</li></ul></div>
 </section>
 <section class="split-section">
-  <div><p class="eyebrow">Professional experience</p><h2>Work experience</h2></div>
-  <div class="section-body"><article class="entry"><h3>AI Engineer Intern</h3><p>Kyanon Digital</p></article></div>
-</section>
-<section class="split-section">
   <div><p class="eyebrow">From the notebook</p><h2>Latest writing</h2><p class="section-note">Learning notes, project write-ups, and occasional personal reflections.</p></div>
   <div class="section-body">
     {% for entry in collections.posts | latest(1) %}
       {% include "partials/entry.njk" %}
     {% else %}<p>New writing will appear here.</p>{% endfor %}
+  </div>
+</section>
+<section class="split-section">
+  <div><p class="eyebrow">From my poetry collection</p><h2>Selected poem</h2></div>
+  <div class="section-body">
+    {% set entryLabel = "Read the poem →" %}
+    {% for entry in collections.poems %}
+      {% if entry.data.featured %}
+        {% include "partials/entry.njk" %}
+      {% endif %}
+    {% endfor %}
   </div>
 </section>
 <section class="split-section"><div><p class="eyebrow">Looking ahead</p><h2>Life goals</h2></div>
