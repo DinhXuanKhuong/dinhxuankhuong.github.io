@@ -10,6 +10,7 @@ Run `python3 -m http.server 8000 --bind 127.0.0.1` from this folder, then open h
 
 - `index.html` — introduction, interests, latest writing, and selected projects.
 - `blog.html` — writing archive.
+- `poems.html` — poetry collection, ready for poems to be added.
 - `posts/` — individual articles; the original welcome post is retained.
 - `projects.html` — selected repositories linked from the previous site.
 - `publications.html` — publication archive, empty until real papers are added.

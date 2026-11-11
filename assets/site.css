@@ -180,9 +180,10 @@ p:last-child {
 .portrait img {
   display:block;
   width:100%;
-  height:340px;
+  height:auto;
+  aspect-ratio:1 / 1;
   object-fit:cover;
-  object-position:53% center;
+  object-position:center;
 }
 
 figcaption {
@@ -197,7 +198,8 @@ figcaption {
   margin-top:28px;
   padding-top:17px;
   display:flex;
-  gap:36px;
+  flex-wrap:wrap;
+  gap:10px 28px;
   font:11px/1.8 var(--mono);
 }
 
@@ -448,9 +450,6 @@ footer small {
     grid-template-columns:minmax(0,1fr) 240px;
     gap:30px;
   }
-  .portrait img {
-    height:310px;
-  }
   .split-section {
     grid-template-columns:220px minmax(0,1fr);
     gap:30px;
@@ -561,4 +560,22 @@ footer small {
   html {
     scroll-behavior:auto;
   }
+}
+
+.contact-email {
+  flex-basis:100%;
+}
+
+.contact-email a {
+  overflow-wrap:anywhere;
+}
+
+.research-interests {
+  margin:0;
+  padding-left:20px;
+  color:var(--navy);
+}
+
+.research-interests li + li {
+  margin-top:12px;
 }
