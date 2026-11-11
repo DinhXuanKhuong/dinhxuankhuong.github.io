@@ -1,32 +1,28 @@
-# DinhXuanKhuong.github.io
+# Dinh Xuan Khuong — personal blog
 
-## Run locally
+A clean, static personal blog based on the academic archive designs in `stitch_academic_research_portfolio_site/`. The original design exports are kept intact for reference. The working website lives at the repository root, ready for GitHub Pages.
 
-- Python: `python3 -m http.server 8000` then open `http://localhost:8000/`
-- Node: `npx serve .`
+## Local preview
 
-## Publish (GitHub Pages)
+Run `python3 -m http.server 8000 --bind 127.0.0.1` from this folder, then open http://localhost:8000. No installation or build is needed.
 
-- Push this repo to GitHub
-- In GitHub: **Settings → Pages → Build and deployment**
-	- Source: **Deploy from a branch**
-	- Branch: `main` (root)
+## Structure
 
-## Enable the contact form (Formspree)
+- `index.html` — introduction, interests, latest writing, and selected projects.
+- `blog.html` — writing archive.
+- `posts/` — individual articles; the original welcome post is retained.
+- `projects.html` — selected repositories linked from the previous site.
+- `publications.html` — publication archive, empty until real papers are added.
+- `life-goals.html` — goals retained from the previous wishlist.
+- `assets/` — shared stylesheet, favicon, and optimized personal photograph.
+- `stitch_academic_research_portfolio_site/` — supplied design references, not the live site.
 
-This site is static, so the contact form uses Formspree.
+## Editing
 
-1. Create an account at https://formspree.io/
-2. Create a new form and copy your endpoint (looks like `https://formspree.io/f/xxxxxxx`)
-3. Open [contact.html](contact.html) and replace:
-	 - `https://formspree.io/f/YOUR_FORM_ID`
-	 with your real endpoint
-4. Commit + push. The form will redirect to [thanks.html](thanks.html) after submit.
+Edit the HTML files directly. To add a post, copy the existing article, update its title, description, date, and body, then add a link in `blog.html` and the homepage’s latest-writing section. Keep shared navigation consistent across pages. All styling is in `assets/site.css`.
 
-## Pin favorite repos on the Projects page
+The site runs without JavaScript or a CSS framework. Google Fonts are optional; local fallback fonts keep it readable without a connection. No fictional academic affiliations, publications, or contact details from the design samples are included.
 
-Open [projects.html](projects.html) and set the repo names here:
+## GitHub Pages
 
-- `data-featured="repo1, repo2, repo3"`
-
-If you leave it empty, the site will automatically feature your top-starred repos.
+Publish from the repository’s default branch, using **/(root)** in **Settings → Pages → Deploy from a branch**. No deployment has been made as part of this local rebuild.

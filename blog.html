@@ -1,77 +1,24 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Blog | Dinh Xuan Khuong</title>
-  <meta name="description" content="Blog posts about learning, projects, memories, and goals." />
-  <link rel="stylesheet" href="assets/site.css" />
+  <meta name="description" content="Learning notes, project write-ups, and personal reflections by Dinh Xuan Khuong.">
+  <meta name="theme-color" content="#fcf9f8">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&amp;family=JetBrains+Mono:wght@400;500&amp;family=Source+Sans+3:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
-  <a class="skip-link" href="#content">Skip to content</a>
-
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true"></div>
-        <a href="index.html">Dinh Xuan Khuong</a>
-      </div>
-      <nav class="nav" aria-label="Primary">
-        <a href="index.html">Home</a>
-        <a href="blog.html">Blog</a>
-        <a href="projects.html">Projects</a>
-        <a href="achievements.html">Achievements</a>
-        <a href="memories.html">Memories</a>
-        <a href="wishlist.html">Wishlist</a>
-        <a href="about.html">About</a>
-        <a href="contact.html">Contact</a>
-      </nav>
-    </div>
-  </header>
-
-  <main id="content" class="container prose">
-    <h1>Blog</h1>
-    <p class="kicker">Short notes, longer stories, and things I learned.</p>
-
-    <section class="grid" aria-label="Posts">
-      <article class="card">
-        <div class="kicker">2026-01-10</div>
-        <h2><a href="posts/2026-01-10-welcome.html">Welcome — why I’m writing</a></h2>
-        <p>A quick intro, what I’ll share here, and what I’m learning right now.</p>
-      </article>
-
-      <article class="card">
-        <div class="kicker">Soon</div>
-        <h2>Next post</h2>
-        <p>Copy the welcome post file and write your next one.</p>
-      </article>
-
-      <article class="card">
-        <div class="kicker">Soon</div>
-        <h2>Another post</h2>
-        <p>Keep it simple: one idea per post.</p>
-      </article>
-    </section>
-
-    <hr />
-
-    <section>
-      <h2>How to add a new post</h2>
-      <ol>
-        <li>Create a new file in <code>posts/</code> named like <code>YYYY-MM-DD-title.html</code>.</li>
-        <li>Copy the structure from the welcome post.</li>
-        <li>Add it to this page (<code>blog.html</code>) as a new card link.</li>
-      </ol>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="small">© <span id="year"></span> Dinh Xuan Khuong</div>
-      <div class="small"><a href="index.html">Back to home</a></div>
-    </div>
-  </footer>
-
-  <script src="assets/site.js"></script>
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="site-header container">
+  <a class="brand" href="index.html"><span>Dinh Xuan Khuong</span><small>Notes &amp; personal archive</small></a>
+  <nav aria-label="Primary"><a href="index.html">Home</a><a href="blog.html" aria-current="page">Blog</a><a href="projects.html">Projects</a><a href="publications.html">Publications</a><a href="life-goals.html">Life Goals</a></nav>
+</header>
+<main id="content" class="container"><div class="page-intro"><p class="eyebrow">The notebook</p><h1>Blog</h1><p class="lead">Learning in public, one idea at a time.</p></div><section class="split-section"><div><p class="eyebrow">Archive · 2026</p><h2>Writing</h2><p class="section-note">Notes, experiments, and reflections collected along the way.</p></div><div class="section-body"><article class="entry"><div class="meta"><time datetime="2026-01-10">10 Jan 2026</time><span>Personal</span></div><h3><a href="posts/2026-01-10-welcome.html">Welcome — why I’m writing</a></h3><p>A place to document what I learn, what I build, and the moments I don’t want to forget.</p><a class="text-link" href="posts/2026-01-10-welcome.html">Read the post →</a></article></div></section></main>
+<footer class="container"><div><span>© 2026 Dinh Xuan Khuong</span><small>A personal archive of learning, building, and living.</small></div><div class="footer-links"><a href="https://github.com/DinhXuanKhuong">GitHub ↗</a><a href="https://www.linkedin.com/in/dinhxuankhuong/">LinkedIn ↗</a><a href="blog.html">Blog →</a></div></footer>
 </body>
 </html>
