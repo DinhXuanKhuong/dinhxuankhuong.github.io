@@ -100,7 +100,7 @@ goals:
     progress: 0
   
   - title: Have 100k subscribers on Youtube
-    progress: 188/100000
+    progress: 0
 ---
 Things I want to do in my life.
 
