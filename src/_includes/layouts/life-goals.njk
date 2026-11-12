@@ -13,7 +13,11 @@ layout: layouts/base.njk
     {% if summary.total %}<progress value="{{ summary.earned }}" max="{{ summary.total }}" aria-label="Life goals progress">{{ summary.percent }}%</progress>{% endif %}
     <p class="goal-progress-detail">{{ summary.complete }} completed · {{ summary.inProgress }} in progress</p>
   </section>
-  <p class="goal-legend"><span>✓ Completed</span><span>~ In progress</span><span>✗ Not yet</span></p>
+  <p class="goal-legend" style="display: flex; justify-content: center; gap: 16px;">
+    <span>✓ Completed</span>
+    <span>~ In progress</span>
+    <span>✗ Not yet</span>
+  </p>
   <ol class="life-goals-list" role="list">
     {% for goal in summary.goals %}
     <li class="life-goal life-goal--{{ goal.status }}">
