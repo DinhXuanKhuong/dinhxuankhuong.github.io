@@ -58,7 +58,8 @@ The `.11tydata.js` file in each content folder supplies its shared layout and UR
 - **Menu links:** `src/_data/navigation.json`.
 - **Fonts, layout, and colors:** `src/assets/site.css`.
 - **Shared page structure:** `src/_includes/layouts/base.njk`.
-- **Life goals and publications:** the corresponding `src/*.njk` file.
+- **Life goals:** `src/life-goals.md`; see [the life goals guide](docs/LIFE-GOALS.md).
+- **Publications:** `src/publications.njk`.
 
 ## Check and build
 

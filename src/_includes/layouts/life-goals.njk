@@ -1,0 +1,33 @@
+---
+layout: layouts/base.njk
+---
+{% set summary = goals | goalSummary %}
+<div class="life-list">
+  <div class="page-intro">
+    <p class="eyebrow">A personal compass</p>
+    <h1>{{ title }}</h1>
+    <div class="life-list-intro">{{ content | safe }}</div>
+  </div>
+  <section class="goal-progress" aria-label="Overall progress">
+    <p><strong>Progress{% if updated %} as of <time datetime="{{ updated | isoDate }}">{{ updated | readableDate }}</time>{% endif %}: {{ summary.earned }} / {{ summary.total }}</strong></p>
+    {% if summary.total %}<progress value="{{ summary.earned }}" max="{{ summary.total }}" aria-label="Life goals progress">{{ summary.percent }}%</progress>{% endif %}
+    <p class="goal-progress-detail">{{ summary.complete }} completed · {{ summary.inProgress }} in progress</p>
+  </section>
+  <p class="goal-legend"><span>✓ Completed</span><span>~ In progress</span><span>✗ Not yet</span></p>
+  <ol class="life-goals-list" role="list">
+    {% for goal in summary.goals %}
+    <li class="life-goal life-goal--{{ goal.status }}">
+      <span class="life-goal-symbol" aria-hidden="true">{{ goal.symbol }}</span>
+      <span class="life-goal-content">
+        <span class="visually-hidden">{% if goal.status == "complete" %}Completed: {% elif goal.status == "in-progress" %}In progress: {% else %}Not yet: {% endif %}</span>
+        {% if goal.url %}<a href="{{ goal.url }}">{{ goal.title }}</a>{% else %}{{ goal.title }}{% endif %}
+        {% if goal.status == "in-progress" %}<span class="life-goal-percentage">({{ goal.progress }}% done)</span>{% endif %}
+        {% if goal.note %}<span class="life-goal-note">{{ goal.note }}</span>{% endif %}
+      </span>
+    </li>
+    {% else %}
+    <li>The list is still taking shape.</li>
+    {% endfor %}
+  </ol>
+  <p class="life-list-credit">Inspired by <a href="https://huyenchip.com/list-100/">Chip Huyen’s List 100</a>.</p>
+</div>

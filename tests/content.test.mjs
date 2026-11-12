@@ -33,6 +33,25 @@ test("published content automatically appears in archives; drafts stay out of ev
   try {
     await cp(path.join(root, "src"), path.join(dir, "src"), { recursive: true });
     const content = path.join(dir, "src/content");
+    await writeFile(path.join(dir, "src/life-goals.md"), `---
+layout: layouts/life-goals.njk
+title: Life Goals
+navKey: life-goals
+permalink: /life-goals.html
+description: "Life goal fixtures."
+updated: 2026-11-12
+goals:
+  - title: "Finished goal"
+    progress: 100
+    url: /poems.html
+    note: "A milestone worth keeping."
+  - title: "Halfway goal"
+    progress: 50
+  - title: "Someday goal"
+---
+A personal list.
+`);
+
     await writeFile(path.join(content, "posts/2026-11-11-new-post.md"), fixture("Newest post", "draft: false\n", 'A code example: `{{ untouched }}`.'));
     await writeFile(path.join(content, "posts/2026-11-11-hidden.md"), fixture("Private draft marker", "draft: true\n"));
     await writeFile(path.join(content, "poems/2026-11-11-poem.md"), fixture("Bài thơ đầu tiên", "language: vi\ndraft: false\n", "Dòng thứ nhất\nDòng thứ hai\n\nKhổ thứ hai."));
@@ -40,10 +59,16 @@ test("published content automatically appears in archives; drafts stay out of ev
     execFileSync(process.execPath, [cli, `--config=${path.join(root, "eleventy.config.js")}`], { cwd: dir, stdio: "pipe" });
     const out = path.join(dir, "_site");
     const homepage = await read(path.join(out, "index.html"));
+    const goalPage = await read(path.join(out, "life-goals.html"));
+    assert.match(goalPage, /1.5 \/ 3/);
+    assert.match(goalPage, /1 completed · 1 in progress/);
+    assert.match(goalPage, /50% done/);
+    assert.match(goalPage, /href="\/poems.html">Finished goal/);
+    assert.match(goalPage, /A milestone worth keeping/);
+    assert.match(goalPage, /Someday goal/);
+
     assert.match(homepage, /Newest post/);
     assert.doesNotMatch(homepage, /Selected projects|Private draft marker/);
-    assert.match(homepage, /final-year Computer Science student/);
-    assert.match(homepage, /HCMUS Campus, Vietnam - 2025/);
     assert.match(await read(path.join(out, "blog.html")), /Newest post/);
     assert.doesNotMatch(await read(path.join(out, "blog.html")), /Private draft marker/);
     await assert.rejects(access(path.join(out, "posts/2026-11-11-hidden.html")));

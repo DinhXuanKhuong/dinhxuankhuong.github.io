@@ -1,3 +1,5 @@
+import { summarizeGoals } from "./src/_lib/goals.js";
+
 const contentKinds = ["posts", "projects", "poems"];
 
 function publishedItems(collection, kind) {
@@ -29,6 +31,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
   eleventyConfig.setNunjucksEnvironmentOptions({ autoescape: true });
   eleventyConfig.addGlobalData("buildYear", () => new Date().getFullYear());
+  eleventyConfig.addFilter("goalSummary", summarizeGoals);
   eleventyConfig.addFilter("latest", (items, count = 1) => items.slice(0, count));
   eleventyConfig.addFilter("isoDate", (value) => new Date(value).toISOString().slice(0, 10));
   eleventyConfig.addFilter("readableDate", (value) =>

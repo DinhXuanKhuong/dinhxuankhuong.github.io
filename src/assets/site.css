@@ -626,3 +626,147 @@ footer small {
   padding-left:24px;
   color:var(--slate);
 }
+
+.life-list {
+  max-width:760px;
+  margin-inline:auto;
+}
+
+.life-list .page-intro {
+  padding-bottom:24px;
+}
+
+.life-list-intro {
+  color:var(--slate);
+  max-width:640px;
+  font-size:18px;
+}
+
+.life-list-intro a,
+.life-goal-content > a,
+.life-list-credit a {
+  text-decoration:underline;
+}
+
+.goal-progress {
+  padding:22px 0;
+  border-block:1px solid var(--rule);
+}
+
+.goal-progress > p {
+  margin-bottom:10px;
+}
+
+.goal-progress strong {
+  font-weight:500;
+  color:var(--navy);
+}
+
+.goal-progress progress {
+  display:block;
+  width:100%;
+  height:6px;
+  border:none;
+  border-radius:0;
+  background:var(--rule);
+  accent-color:var(--navy);
+}
+
+.goal-progress progress::-webkit-progress-bar {
+  background:var(--rule);
+}
+
+.goal-progress progress::-webkit-progress-value {
+  background:var(--navy);
+}
+
+.goal-progress progress::-moz-progress-bar {
+  background:var(--navy);
+}
+
+.goal-progress-detail,
+.goal-legend {
+  font:11px/1.8 var(--mono);
+  color:var(--slate);
+}
+
+.goal-progress .goal-progress-detail {
+  margin:12px 0 0;
+}
+
+.goal-legend {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 24px;
+  margin:22px 0;
+}
+
+.life-goals-list {
+  padding:0;
+  margin:0;
+  counter-reset:life-goal;
+}
+
+.life-goal {
+  display:grid;
+  grid-template-columns:24px 20px minmax(0,1fr);
+  gap:8px;
+  padding:10px 0;
+  overflow-wrap:anywhere;
+  counter-increment:life-goal;
+}
+
+.life-goal::before {
+  content:counter(life-goal) ".";
+  color:var(--slate);
+  font:12px/2.3 var(--mono);
+}
+
+.life-goal-symbol {
+  display:inline-block;
+  width:24px;
+  color:var(--slate);
+  font:15px var(--mono);
+  vertical-align:top;
+  padding-top:4px;
+}
+
+.life-goal--complete .life-goal-symbol {
+  color:#2d694d;
+}
+
+.life-goal-content {
+  min-width:0;
+}
+
+.life-goal-note {
+  display:block;
+  color:var(--slate);
+  font-size:15px;
+  margin-top:4px;
+}
+
+.life-goal-percentage {
+  color:var(--slate);
+  font-size:14px;
+}
+
+.life-list-credit {
+  border-top:1px solid var(--rule);
+  margin-top:32px;
+  padding-top:20px;
+  color:var(--slate);
+  font-size:14px;
+}
+
+.visually-hidden {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+  border:0;
+}
