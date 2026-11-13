@@ -9,7 +9,7 @@ goals:
   - title: Win a Hackathon as a university student
     progress: 100
 
-  - title: Publish a paper CORE B (or higher) during university
+  - title: Publish a paper rank CORE B (or higher) during university
     progress: 0
   
   - title: Write 205 poems
@@ -101,6 +101,47 @@ goals:
   
   - title: Have 100k subscribers on Youtube
     progress: 0
+  
+  - title: Buy my own car
+    progress: 0
+
+  - title: Become a lecturer
+    progress: 0
+
+  - title: Release a song on Spotify
+    progress: 0
+
+  - title: Live abroad for at least 6 months
+    progress: 0
+
+  - title: Perform piano in front of over 10 audiences
+    progress: 0
+  
+  - title: Learn to sing
+    progress: 0
+
+  - title: Write and finish a book
+    progress: 0
+  
+  - title: Kiss my love in the rain
+    progress: 0
+  
+  - title: Treat my family to a meal at a fancy restaurant
+    progress: 0
+
+  - title: Start a research lab
+    progress: 0 
+
+  - title: Eat at a 3 Michelin star restaurant
+    progress: 0
+
+  - title: Play poker in a casino
+    progress: 0
+  
+  - title: Ask a stranger out 
+    progress: 0
+
+  
 ---
 Things I want to do in my life.
 

@@ -8,7 +8,7 @@ draft: false
 
 Ta sinh ra, chẳng hề biết đến nhau
 Dòng màu hồng, chảy về cùng một hướng
-Chảy trong tìm là tình thương tổ quốc
+Chảy trong tim là tình thương tổ quốc
 Dòng máu hồng, dòng chảy về quê hương
 
 Tôi gửi người, đồng chí ở phương xa
