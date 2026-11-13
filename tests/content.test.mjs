@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, writeFile, rm, access } from "node:fs/promises";
+import { cp, mkdtemp, readFile, writeFile, rm, access, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -33,6 +33,13 @@ test("published content automatically appears in archives; drafts stay out of ev
   try {
     await cp(path.join(root, "src"), path.join(dir, "src"), { recursive: true });
     const content = path.join(dir, "src/content");
+    // Keep archive tests independent of the dates of newly authored real posts.
+    for (const filename of await readdir(path.join(content, "posts"))) {
+      if (filename.endsWith(".md") && filename !== "2026-01-10-welcome.md") {
+        await rm(path.join(content, "posts", filename));
+      }
+    }
+
     await writeFile(path.join(dir, "src/life-goals.md"), `---
 layout: layouts/life-goals.njk
 title: Life Goals
