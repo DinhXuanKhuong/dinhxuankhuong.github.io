@@ -33,9 +33,9 @@ test("published content automatically appears in archives; drafts stay out of ev
   try {
     await cp(path.join(root, "src"), path.join(dir, "src"), { recursive: true });
     const content = path.join(dir, "src/content");
-    // Keep archive tests independent of the dates of newly authored real posts.
+    // Use test-owned posts so publishing or deleting real posts cannot break this test.
     for (const filename of await readdir(path.join(content, "posts"))) {
-      if (filename.endsWith(".md") && filename !== "2026-01-10-welcome.md") {
+      if (filename.endsWith(".md")) {
         await rm(path.join(content, "posts", filename));
       }
     }
@@ -59,6 +59,10 @@ goals:
 A personal list.
 `);
 
+    await writeFile(
+      path.join(content, "posts/2020-01-10-stable-url.md"),
+      fixture("Older sample post", "draft: false\n").replace("date: 2026-11-11", "date: 2020-01-10"),
+    );
     await writeFile(path.join(content, "posts/2026-11-11-new-post.md"), fixture("Newest post", "draft: false\n", 'A code example: `{{ untouched }}`.'));
     await writeFile(path.join(content, "posts/2026-11-11-hidden.md"), fixture("Private draft marker", "draft: true\n"));
     await writeFile(path.join(content, "poems/2026-11-11-poem.md"), fixture("Bài thơ đầu tiên", "language: vi\ndraft: false\n", "Dòng thứ nhất\nDòng thứ hai\n\nKhổ thứ hai."));
@@ -87,7 +91,7 @@ A personal list.
     assert.match(poem, /Dòng thứ nhất\nDòng thứ hai/);
     assert.match(await read(path.join(out, "projects.html")), /New project/);
     assert.match(await read(path.join(out, "projects/new-project.html")), /https:\/\/github.com\/example\/project/);
-    await access(path.join(out, "posts/2026-01-10-welcome.html"));
+    await access(path.join(out, "posts/2020-01-10-stable-url.html"));
     execFileSync(process.execPath, [path.join(root, "scripts/check-site.mjs"), out], { stdio: "pipe" });
     await writeFile(path.join(content, "poems/bad-draft.md"), fixture("Bad draft", 'draft: "false"\n'));
     assert.notEqual(spawnSync(process.execPath, [cli, `--config=${path.join(root, "eleventy.config.js")}`], { cwd: dir }).status, 0);
