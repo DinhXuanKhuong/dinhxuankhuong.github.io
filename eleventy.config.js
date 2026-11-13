@@ -1,4 +1,7 @@
 import { summarizeGoals } from "./src/_lib/goals.js";
+import { fileURLToPath } from "node:url";
+import MarkdownIt from "markdown-it";
+import { katex } from "@mdit/plugin-katex";
 
 const contentKinds = ["posts", "projects", "poems"];
 
@@ -28,6 +31,16 @@ function publishedItems(collection, kind) {
 }
 
 export default function (eleventyConfig) {
+  eleventyConfig.setLibrary("md", new MarkdownIt({ html: true }).use(katex, {
+    throwOnError: true,
+    trust: false,
+  }));
+  const katexAsset = (name) => fileURLToPath(new URL(`./node_modules/katex/${name}`, import.meta.url));
+  eleventyConfig.addPassthroughCopy({
+    [katexAsset("dist/katex.min.css")]: "assets/katex/katex.min.css",
+    [katexAsset("dist/fonts")]: "assets/katex/fonts",
+    [katexAsset("LICENSE")]: "assets/katex/LICENSE",
+  });
   eleventyConfig.addPassthroughCopy({ "src/assets": "assets" });
   eleventyConfig.setNunjucksEnvironmentOptions({ autoescape: true });
   eleventyConfig.addGlobalData("buildYear", () => new Date().getFullYear());

@@ -63,7 +63,11 @@ A personal list.
       path.join(content, "posts/2020-01-10-stable-url.md"),
       fixture("Older sample post", "draft: false\n").replace("date: 2026-11-11", "date: 2020-01-10"),
     );
-    await writeFile(path.join(content, "posts/2026-11-11-new-post.md"), fixture("Newest post", "draft: false\n", 'A code example: `{{ untouched }}`.'));
+    await writeFile(path.join(content, "posts/2026-11-11-new-post.md"), fixture("Newest post", "draft: false\nmath: true\n", [
+      'A code example: `{{ untouched }}`. Inline math: $d_k$.',
+      '$$\n\\frac{QK^{\\mathsf T}}{\\sqrt{d_k}}\n$$',
+      '```text\n$not_math$\n```',
+    ].join('\n\n')));
     await writeFile(path.join(content, "posts/2026-11-11-hidden.md"), fixture("Private draft marker", "draft: true\n"));
     await writeFile(path.join(content, "poems/2026-11-11-poem.md"), fixture("Bài thơ đầu tiên", "language: vi\ndraft: false\n", "Dòng thứ nhất\nDòng thứ hai\n\nKhổ thứ hai."));
     await writeFile(path.join(content, "projects/new-project.md"), fixture("New project", "repository: https://github.com/example/project\ndraft: false\n"));
@@ -84,6 +88,13 @@ A personal list.
     assert.doesNotMatch(await read(path.join(out, "blog.html")), /Private draft marker/);
     await assert.rejects(access(path.join(out, "posts/2026-11-11-hidden.html")));
     assert.match(await read(path.join(out, "posts/2026-11-11-new-post.html")), /\{\{ untouched \}\}/);
+    const mathPost = await read(path.join(out, "posts/2026-11-11-new-post.html"));
+    assert.match(mathPost, /class="katex-display"/);
+    assert.match(mathPost, /<math[^>]*xmlns="http:\/\/www.w3.org\/1998\/Math\/MathML"/);
+    assert.match(mathPost, /href="\/assets\/katex\/katex.min.css"/);
+    assert.match(mathPost, /<code class="language-text">\$not_math\$/);
+    assert.doesNotMatch(homepage, /href="\/assets\/katex\/katex.min.css"/);
+    await access(path.join(out, "assets/katex/fonts/KaTeX_Main-Regular.woff2"));
     assert.match(await read(path.join(out, "poems.html")), /Bài thơ đầu tiên/);
     const poem = await read(path.join(out, "poems/2026-11-11-poem.html"));
     assert.match(poem, /lang="vi"/);

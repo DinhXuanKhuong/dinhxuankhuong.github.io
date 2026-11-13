@@ -14,6 +14,9 @@
     "test": "node --test"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^3.1.2"
+    "@11ty/eleventy": "^3.1.2",
+    "@mdit/plugin-katex": "^1.2.0",
+    "katex": "^0.19.1",
+    "markdown-it": "^15.0.3"
   }
 }

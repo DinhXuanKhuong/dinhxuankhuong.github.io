@@ -1,10 +1,11 @@
 ---
 title: "How Learning Transformers Helped Me Get My First AI Engineer Internship"
 date: 2026-11-13
-description: "From attention and positional encoding to my first AI Engineer internship—and why I now think software engineering belongs in every AI learning path."
+description: "A detailed, illustrated walkthrough from RNNs and LSTMs to Transformer blocks, RoPE, and KV caching—and the software lessons from my first AI Engineer internship."
 category: Learning & career
 language: en
 draft: false
+math: true
 ---
 Learning Transformers helped me get my first AI Engineer internship at Kyanon Digital. After starting the internship, I also realized how much I still needed to learn about software engineering.
 
@@ -20,151 +21,525 @@ Preparing an explanation makes the gaps in your understanding visible. Knowing t
 
 The technical walkthrough below follows [our slides](/assets/slides/transformers-attention-is-all-you-need.pdf) and uses [Vaswani et al.’s *Attention Is All You Need*](https://arxiv.org/pdf/1706.03762) as the reference for the original architecture. RoPE comes later in the story; it is not part of the 2017 model.
 
-## The architecture: a path from tokens to predictions
+<nav class="article-toc" aria-label="In this post">
+  <p class="eyebrow">The technical walkthrough</p>
+  <ol>
+    <li><a href="#problem">Problem statement and motivation</a></li>
+    <li><a href="#recurrence">What RNNs and LSTMs struggle with</a></li>
+    <li><a href="#architecture">The complete architecture</a></li>
+    <li><a href="#encoder">Inside the encoder</a></li>
+    <li><a href="#decoder">Inside the decoder</a></li>
+    <li><a href="#temperature">The output head and temperature</a></li>
+    <li><a href="#kv-cache">KV caching and its memory trade-off</a></li>
+    <li><a href="#position">Positional encoding and RoPE</a></li>
+    <li><a href="#internship">What the internship taught me next</a></li>
+  </ol>
+</nav>
 
-The original Transformer is an **encoder–decoder** architecture. For a translation task, the encoder builds contextual representations of the source sentence. The decoder uses those representations and the target tokens available so far to predict the next target token.
+<h2 id="problem">1. The problem: learn relationships across a sequence</h2>
 
-<figure class="article-figure">
-  <a href="/assets/images/transformer-internship/architecture.png"><img src="/assets/images/transformer-internship/architecture.png" alt="Annotated encoder–decoder Transformer: embeddings and positional encodings feed stacked attention and feed-forward blocks, followed by an output projection and softmax." loading="lazy" width="1500" height="844"></a>
-  <figcaption>Slide 8 from our presentation, annotating Figure 1 of Vaswani et al. Open the image to inspect the full diagram.</figcaption>
-</figure>
+Consider translating a sentence. A model needs to recognize individual tokens, connect words that depend on each other, keep track of order, and generate an output whose length may differ from the input. A useful representation of “bank” should change depending on whether the surrounding sentence is about a river or money.
 
-Each encoder layer contains self-attention and a position-wise feed-forward network. A decoder layer adds two attention stages: masked self-attention over the target sequence, then cross-attention to the encoder output. Residual connections and normalization surround these sublayers.
+For an input sequence `x` and target sequence `y`, autoregressive generation models the target as a sequence of conditional predictions:
 
-During training, the decoder receives the target sequence shifted right. A causal mask prevents a position from using future target tokens, so many positions can be trained in parallel without leaking the answer. During autoregressive generation, predictions are produced one token at a time. Parallel training does not mean that the whole response is generated at once.
+$$
+P(y \mid x) = \prod_{t=1}^{T} P(y_t \mid y_1,\ldots,y_{t-1},x)
+$$
 
-GPT-style language models use a **decoder-only** arrangement. They keep causal self-attention but do not require a separate encoder and encoder–decoder cross-attention. Understanding the original diagram helped me see what later architectures keep, remove, or change.
+For a decoder-only language model, the conditioning is the available token prefix instead of a separate encoded source. In either case, the next prediction needs information from context.
 
-## What each component contributes
+The engineering question is how to make that context available: **can positions exchange information effectively, without forcing every training example through a long chain of sequential steps?**
 
-### Token embeddings: give token IDs a representation
+This is the motivation I find most useful for understanding Transformers. Attention creates direct interactions between positions, and matrix operations make many of those interactions parallelizable. The goal is a useful route for information and learning—not simply replacing one fashionable layer with another.
 
-A tokenizer turns text into token IDs. A token may be a word, part of a word, or another unit; there is no guarantee that one word equals one token.
+<h2 id="recurrence">2. Why RNNs and LSTMs are not the whole answer</h2>
 
-An embedding layer maps each ID to a learned vector. For a sequence of `T` tokens and model width `D`, the representation has shape `T × D`, before adding a batch dimension. Later layers refine these vectors using context.
+### An RNN carries a state through time
 
-### Position information: tell the model about order
+An RNN updates a hidden state using the current input and the previous hidden state:
 
-Content-only self-attention does not inherently encode sequence order. We therefore need a way to distinguish the same content appearing at different positions.
-
-Our slides explain sinusoidal positional encoding: sine and cosine signals at different frequencies create a vector for each position. In the original Transformer, this vector is added to the token embedding. The model receives information about both token identity and location.
-
-A formula being defined for a longer position does not, by itself, guarantee that a model will work well on much longer sequences. That distinction becomes important when discussing context length.
-
-### Attention: let a token gather relevant context
-
-Attention produces a weighted mixture of information from other positions. It is a learned computation, not a literal act of reading or human understanding.
-
-For self-attention, the current token representations `X` are projected into three sets of vectors:
-
-```text
-Q = XW_Q    queries
-K = XW_K    keys
-V = XW_V    values
-```
-
-A useful intuition is:
-
-- A **query** describes what information a position is looking for.
-- A **key** helps determine how relevant another position is to that query.
-- A **value** contains information that can be passed into the resulting representation.
-
-These roles arise through learned projections and the training objective. The vectors are not manually assigned meanings such as “subject” or “verb.”
-
-Scaled dot-product attention is:
-
-<div class="math-block" role="math" aria-label="Attention of Q, K, V equals softmax of Q K transpose divided by the square root of d k, plus the mask, multiplied by V.">Attention(Q, K, V) = softmax(QKᵀ / √dₖ + M)V</div>
-
-Here, `dₖ` is the dimension of each query/key vector **within a head**. `M` is an optional mask: allowed positions receive zero and blocked positions receive negative infinity before softmax.
-
-The computation has four steps. Dot products produce query–key compatibility scores. Scaling controls their magnitude. Softmax turns each query’s scores into weights over allowed keys. Multiplying by `V` forms a weighted sum of the value vectors.
-
-For one head, if `Q` and `K` have shape `T × dₖ`, then `QKᵀ` has shape `T × T`. Each row corresponds to one query position; its columns correspond to key positions. Keeping track of these shapes makes the equation much easier to reason about.
-
-### Multi-head attention: learn several contextual mixtures
-
-Each attention head has its own projections. Heads can learn different ways of relating positions, and their outputs are concatenated and passed through an output projection.
+$$
+h_t = \tanh(W_x x_t + W_h h_{t-1} + b)
+$$
 
 <figure class="article-figure">
-  <a href="/assets/images/transformer-internship/multi-head-attention.png"><img src="/assets/images/transformer-internship/multi-head-attention.png" alt="Slide showing parallel attention heads, scaled dot-product attention, concatenation, and an output projection." loading="lazy" width="1500" height="844"></a>
-  <figcaption>Slide 31 from our presentation. Each head operates in its projected space; the output projection combines their results.</figcaption>
+  <a href="/assets/images/transformer-internship/rnn.png"><img src="/assets/images/transformer-internship/rnn.png" alt="An unrolled recurrent network passes a hidden state along the sequence." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 4 from our presentation. An unrolled recurrent network passes a hidden state along the sequence. Open the image for a larger view.</figcaption>
 </figure>
 
-It is tempting to describe each head as a specialist with a fixed linguistic job. That can be a helpful illustration, but it is not a guarantee about what every trained head learns.
+That recurrence gives the model a natural way to process ordered data. But computing $h_t$ requires $h_{t-1}$. We can parallelize work across examples and within matrix operations, while the chain of hidden states inside one example remains sequential.
 
-### Masked attention and cross-attention: control information access
+There is also an information problem. Earlier evidence must survive many updates if it is to influence a much later prediction. A finite hidden state can represent useful history, but retaining the right details becomes a learning challenge as the sequence grows.
 
-In **causal self-attention**, position `t` can attend to positions up to and including `t`, but not later positions. This enforces the information boundary needed for next-token prediction. Padding masks serve a different purpose: excluding padding positions.
+### Where vanishing and exploding gradients come from
 
-In **cross-attention**, queries come from the decoder, while keys and values come from encoder representations. The decoder can retrieve source-side information relevant to its current prediction. This is the bridge between the two halves of the original architecture.
+During backpropagation through time, the effect of an early hidden state on a later one involves a product of Jacobians:
 
-### The feed-forward network: transform features at each position
+$$
+\frac{\partial h_t}{\partial h_k} = \frac{\partial h_t}{\partial h_{t-1}} \cdots \frac{\partial h_{k+1}}{\partial h_k}
+$$
 
-Attention mixes information **across positions**. The feed-forward network then applies a nonlinear transformation **within each position’s representation**, using the same network at every position.
+As an intuition, imagine that each step multiplies a scalar gradient by `0.9`. After 100 steps, the factor is about `0.0000266`. With a factor of `1.1`, it is about `13,781`. Real networks use matrices and nonlinearities, but repeated multiplication explains why a training signal can shrink away or grow uncontrollably.
+
+For `tanh`, saturation adds another difficulty: its derivative is small when the activation is near either extreme. The model may therefore struggle to assign credit to an event many steps earlier. Gradient clipping helps control exploding gradients; it does not recreate a signal that has already vanished.
+
+### LSTMs improve the memory path
+
+LSTMs introduce a cell state and learned gates. A simplified view of the cell update is:
+
+$$
+\begin{aligned} c_t &= f_t \odot c_{t-1} + i_t \odot g_t \\ h_t &= o_t \odot \tanh(c_t) \end{aligned}
+$$
+
+The forget gate $f_t$ controls retention, the input gate $i_t$ controls writing, and the output gate $o_t$ controls exposure of the cell state. The candidate $g_t$ proposes new content.
 
 <figure class="article-figure">
-  <a href="/assets/images/transformer-internship/feed-forward.png"><img src="/assets/images/transformer-internship/feed-forward.png" alt="Feed-forward network expanding a token representation, applying a nonlinearity, and projecting it back to the model width." loading="lazy" width="1500" height="844"></a>
-  <figcaption>Slide 46 from our presentation: expand, apply a nonlinearity, and project back.</figcaption>
+  <a href="/assets/images/transformer-internship/lstm.png"><img src="/assets/images/transformer-internship/lstm.png" alt="The LSTM cell state and gates provide a more flexible route for memory." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 6 from our presentation. The LSTM cell state and gates provide a more flexible route for memory. Open the image for a larger view.</figcaption>
 </figure>
 
-The original formulation uses two linear transformations with ReLU between them:
+Along the direct cell-state path, the derivative with respect to the previous cell state contains the forget gate. When that gate stays close to one, information and gradients have a more favorable route through time than in a plain recurrent update.
+
+That is a major improvement, not a guarantee of perfect memory. For intuition, repeatedly retaining `0.99` of a signal for 1,000 steps leaves about `0.0000432`. An LSTM must learn what to retain, and the recurrence is still sequential. It is inaccurate to say that LSTMs *cannot* learn long-term dependencies; they were designed to help with them, but the problem is not universally solved.
+
+A basic encoder–decoder RNN that compresses the whole source into one vector adds a bottleneck. Attention can let a decoder access multiple source states instead. Recurrent models can use attention too; the Transformer’s distinctive step is organizing its sequence processing around attention without recurrent state updates.
+
+<h2 id="architecture">3. The architecture at a glance</h2>
+
+The original [Transformer paper](https://arxiv.org/pdf/1706.03762) describes an **encoder–decoder** model. The encoder turns source tokens into contextual representations. The decoder uses those representations and a target prefix to predict the next target token.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/architecture.png"><img src="/assets/images/transformer-internship/architecture.png" alt="Our annotations of the original encoder–decoder diagram, Figure 1 of Vaswani et al." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 8 from our presentation. Our annotations of the original encoder–decoder diagram, Figure 1 of Vaswani et al. Open the image for a larger view.</figcaption>
+</figure>
+
+A compact view is:
 
 ```text
-FFN(x) = ReLU(xW₁ + b₁)W₂ + b₂
+Source tokens → embeddings + positions → encoder stack → source representations
+                                                             ↓
+Target prefix → embeddings + positions → decoder stack → vocabulary logits
 ```
 
-The temporary expansion provides room to transform features before returning to the model width. Calling the model a Transformer does not mean attention is doing all the work.
+One encoder layer contains self-attention and a feed-forward network. One decoder layer contains causal self-attention, cross-attention, and a feed-forward network. Both use residual connections and normalization.
 
-### Residual connections and normalization: support deeper computation
+The diagram describes the original architecture. Encoder-only and decoder-only models keep different parts of this design. A GPT-style decoder-only model has causal self-attention without a separate source encoder or encoder–decoder cross-attention.
 
-A residual connection adds a sublayer’s input back to its output: `x + F(x)`. This gives the network a direct path for information and gradients, so a sublayer can learn an update to an existing representation.
+### Before the blocks: token embeddings
 
-Layer normalization normalizes a token’s features and uses learned scale and shift parameters. It is different from normalizing a feature across examples in a batch.
+A tokenizer maps text into token IDs. Tokens can be words, word pieces, punctuation, or other units. The embedding table maps each ID to a learned vector; it does not assign a finished contextual meaning by itself.
 
-Placement matters: the original architecture uses normalization after the residual addition, often called **post-norm**. Many later architectures use other arrangements. I try to identify the variant before treating a block diagram as a universal recipe.
+I will use these dimensions below:
 
-### The prediction head and temperature: turn a representation into a token choice
+| Symbol | Meaning |
+| --- | --- |
+| `B` | Batch size |
+| `S` | Source sequence length |
+| `T` | Target or language-model sequence length |
+| `D` | Model width |
+| `H` | Number of query attention heads |
+| $d_k$, $d_v$ | Per-head key/query and value dimensions |
 
-The output projection maps a decoder representation to vocabulary-sized **logits**. Softmax converts logits to probabilities.
+A source batch starts as `B × S` IDs and becomes `B × S × D` vectors. Position information is incorporated so the model can distinguish sequence order; I return to the original encoding and RoPE after explaining the blocks.
 
-Temperature adjusts a sampling distribution by scaling logits before softmax. A lower positive temperature sharpens it; a higher temperature flattens it. Greedy decoding chooses the highest-scoring token directly. These are decoding choices, not replacements for learning useful representations.
+<h2 id="encoder">4. Inside the encoder</h2>
 
-## From positional encoding to RoPE
+### Self-attention: build a contextual representation
 
-The next useful question was how position enters attention itself.
+A source token can use information from other valid source positions. Self-attention calculates which information to mix into its representation.
 
-[Rotary Position Embedding, introduced in the RoFormer paper](https://arxiv.org/abs/2104.09864), applies position-dependent rotations to pairs of query and key coordinates. Rather than simply adding a position vector to the input embedding, it makes the attention score depend on relative displacement through those rotations.
+For one head, let `X` be the current representations. The learned projections create queries, keys, and values:
 
-In simplified notation:
+$$
+\begin{aligned} Q &= XW_Q \\ K &= XW_K \\ V &= XW_V \end{aligned}
+$$
+
+The query asks what information this position is looking for. The key describes how it can be matched to a query, and the value carries the information it can contribute.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/query-key-value.png"><img src="/assets/images/transformer-internship/query-key-value.png" alt="Queries, keys, and values are separate learned projections of representations." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 21 from our presentation. Queries, keys, and values are separate learned projections of representations. Open the image for a larger view.</figcaption>
+</figure>
+
+All three come from the same sequence in self-attention, but the projection matrices differ. These questions are intuition for the computation, not labels manually written into the vectors. The projections are learned through training.
+
+#### Step 1: compare queries with keys
+
+For positions `i` and `j`, the dot product $q_i\cdot k_j$ is a compatibility score. With token vectors represented as rows, all scores can be computed together as $QK^{\mathsf T}$.
+
+If `Q` and `K` have shape `B × S × dₖ`, the score tensor has shape `B × S × S`. A row corresponds to a query; its columns correspond to candidate keys.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/attention-scores.png"><img src="/assets/images/transformer-internship/attention-scores.png" alt="Building the query–key score matrix. The article uses row-token notation and the per-head scale √dₖ." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 27 from our presentation. Building the query–key score matrix. The article uses row-token notation and the per-head scale √dₖ. Open the image for a larger view.</figcaption>
+</figure>
+
+**Notation note:** the slides use some column-vector conventions. Here I consistently use token rows and divide by $\sqrt{d_k}$, the query/key width within a head—not the full model width when those widths differ.
+
+#### Step 2: scale and mask the scores
+
+A dot product sums over $d_k$ coordinates. Under a rough independent, unit-variance assumption, its variance grows with $d_k$. Dividing by $\sqrt{d_k}$ keeps score magnitudes more controlled and helps avoid an excessively saturated softmax.
+
+Masks decide which positions are available. A source-padding mask excludes padding tokens. The encoder’s ordinary bidirectional self-attention does not apply the decoder’s future-token restriction.
+
+#### Step 3: normalize over the available keys
+
+Softmax is applied across the key positions for each query:
+
+$$
+A = \operatorname{softmax}\!\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}+M\right)
+$$
+
+Allowed mask entries are zero; blocked entries are negative infinity before softmax. Each valid row becomes a distribution over its allowed keys. Implementations must also handle padding carefully so a query does not accidentally softmax a row with no valid keys.
+
+#### Step 4: combine the values
+
+$$
+\operatorname{Attention}(Q,K,V) = AV
+$$
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/context-vectors.png"><img src="/assets/images/transformer-internship/context-vectors.png" alt="Attention weights form a weighted sum of the value vectors." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 29 from our presentation. Attention weights form a weighted sum of the value vectors. Open the image for a larger view.</figcaption>
+</figure>
+
+If a query has weights `[0.7, 0.2, 0.1]`, its output is $0.7v_1+0.2v_2+0.1v_3$. For scalar values `[10, 0, -10]`, that mixture would be `6`. In a real head, the values are vectors, so the same weights combine every value coordinate.
+
+The result is a new representation informed by context. The values need not be the original embeddings; in deeper layers, they are projections of already contextualized states.
+
+### Multi-head attention: several learned views
+
+One set of projections gives one way to compare and combine positions. Multi-head attention runs several learned projections in parallel, so the same sequence can be processed through different representation subspaces.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/multi-head-attention.png"><img src="/assets/images/transformer-internship/multi-head-attention.png" alt="Several projected heads process the same sequence in parallel." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 31 from our presentation. Several projected heads process the same sequence in parallel. Open the image for a larger view.</figcaption>
+</figure>
+
+For head `h`:
+
+$$
+\begin{aligned} \mathrm{head}_h &= \operatorname{Attention}(XW_{Qh},XW_{Kh},XW_{Vh}) \\ \operatorname{MultiHead}(X) &= \operatorname{Concat}(\mathrm{head}_1,\ldots,\mathrm{head}_H)W_O \end{aligned}
+$$
+
+A “multi-view” intuition is useful: one head might emphasize a nearby relationship while another responds to more distant context. However, the architecture does not guarantee a particular linguistic role for each head, or that all heads will learn distinct useful behaviors.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/head-projection.png"><img src="/assets/images/transformer-internship/head-projection.png" alt="Concatenation gathers the head outputs; a learned projection mixes them." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 33 from our presentation. Concatenation gathers the head outputs; a learned projection mixes them. Open the image for a larger view.</figcaption>
+</figure>
+
+The output projection $W_O$ mixes information across the concatenated heads and returns it to model width `D`. It is learned, so concatenation is not the last operation.
+
+Implementations commonly project many heads in one matrix multiplication, then reshape and transpose tensors. With standard equal-width heads, $d_k=d_v=D/H$, giving:
 
 ```text
-q̃ₘ = Rₘqₘ
-k̃ₙ = Rₙkₙ
-
-q̃ₘᵀk̃ₙ = qₘᵀRₘᵀRₙkₙ = qₘᵀRₙ₋ₘkₙ
+Input:           [B, S, D]
+Queries/keys:    [B, H, S, dₖ]
+Values:          [B, H, S, dᵥ]
+Attention:       [B, H, S, S]
+Head outputs:    [B, H, S, dᵥ]
+Combined output: [B, S, D]
 ```
 
-`R` represents the rotary transformation. Its relative-position structure is the important idea here. RoPE is a way to represent position; it does not remove the pairwise cost of dense attention or guarantee unlimited useful context.
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/attention-tensors.png"><img src="/assets/images/transformer-internship/attention-tensors.png" alt="Batched tensor operations organize the attention computation for parallel hardware." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 34 from our presentation. Batched tensor operations organize the attention computation for parallel hardware. Open the image for a larger view.</figcaption>
+</figure>
 
-Being able to connect the original positional-encoding idea to RoPE helped me move beyond memorizing a single architecture diagram.
+This is a useful place to check code: the softmax axis should select keys, and heads must be recombined in the intended order.
 
-## Attention also has weaknesses
+The direct connections also have a cost. Dense self-attention compares every query with every key: doubling sequence length roughly quadruples the number of score entries. Materializing the attention matrix uses $O(BHS^2)$ elements, and the pairwise computation is quadratic in sequence length. Memory-efficient implementations can avoid storing that whole matrix, but exact dense attention still performs quadratic pairwise work. Attention gives distant tokens a shorter communication path; it does not guarantee that the model will retrieve the right fact from a long context.
 
-A good explanation needs to cover where the mechanism becomes expensive or insufficient.
+### Feed-forward network: transform each position’s features
 
-**Long sequences are costly.** Dense self-attention compares pairs of positions. For sequence length `T`, that pairwise work grows quadratically with `T`; a straightforward implementation also materializes a `T × T` score matrix per head.
+Attention mixes information across positions. The feed-forward network applies a nonlinear transformation to each position separately, with shared parameters across positions within that layer.
 
-**Access to context is not reliable use of context.** A token being within the context window does not guarantee that a model will select the right evidence, reason correctly, or stay factually grounded.
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/feed-forward.png"><img src="/assets/images/transformer-internship/feed-forward.png" alt="A position-wise network expands, transforms, and projects features back to the model width." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 46 from our presentation. A position-wise network expands, transforms, and projects features back to the model width. Open the image for a larger view.</figcaption>
+</figure>
 
-**Autoregressive generation remains sequential.** Producing the next token depends on the tokens already generated. Serving latency is a separate concern from parallelizing training.
+$$
+\operatorname{FFN}(x) = \operatorname{ReLU}(xW_1+b_1)W_2+b_2
+$$
 
-These distinctions gave me better questions to ask: what computation is happening, what information is available, and what does this design still fail to solve?
+The first projection expands the feature dimension; the second returns it to `D`. The nonlinearity matters: without it, two consecutive linear transformations would collapse into a single affine transformation.
 
-## What changed after I started the internship
+The FFN can transform and recombine features discovered through attention. It does not itself create another token-to-token interaction. Later variants change the activations or introduce gating, so this equation should be read as the original block rather than a definition of every modern LLM.
+
+### Residual connections: a more direct gradient path
+
+Instead of replacing `x` with `F(x)`, a residual block computes:
+
+$$
+y = x + F(x)
+$$
+
+That lets a sublayer learn an update to an existing representation. With column-vector gradient notation and Jacobian $J_F$:
+
+$$
+\frac{\partial L}{\partial x} = \bigl(I+J_F(x)\bigr)^{\mathsf T}\frac{\partial L}{\partial y}
+$$
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/residual-gradient.png"><img src="/assets/images/transformer-internship/residual-gradient.png" alt="The identity route in a residual addition contributes to gradient flow." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 40 from our presentation. The identity route in a residual addition contributes to gradient flow. Open the image for a larger view.</figcaption>
+</figure>
+
+The identity term gives gradients a direct route that does not depend only on repeatedly multiplying through the learned branch. If that branch’s derivative is small, there is still an identity contribution. This explains why skip connections can make deep networks easier to optimize; the [original residual-learning paper](https://arxiv.org/abs/1512.03385) is a useful reference.
+
+The `+ I` term is not a promise that gradients can never vanish. Different paths can interact or cancel, and normalization adds its own Jacobian. The simple derivative above describes the residual addition before any subsequent normalization. This is why the placement of normalization matters.
+
+### Layer normalization: normalize features within a token
+
+For a representation tensor `X` with shape `[B, S, D]`, the usual Transformer LayerNorm computes a mean and variance over the `D` features of each token separately:
+
+$$
+\begin{aligned} \mu_{b,s} &= \frac{1}{D}\sum_{j=1}^{D} X_{b,s,j} \\ \sigma^2_{b,s} &= \frac{1}{D}\sum_{j=1}^{D}(X_{b,s,j}-\mu_{b,s})^2 \\ \operatorname{LN}(x) &= \gamma\odot\frac{x-\mu}{\sqrt{\sigma^2+\varepsilon}}+\beta \end{aligned}
+$$
+
+The learned scale $\gamma$ and shift $\beta$ allow the model to adjust the normalized representation; $\varepsilon$ supports numerical stability.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/layer-norm.png"><img src="/assets/images/transformer-internship/layer-norm.png" alt="Normalization followed by a learned scale and shift." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 43 from our presentation. Normalization followed by a learned scale and shift. Open the image for a larger view.</figcaption>
+</figure>
+
+#### How is that different from BatchNorm?
+
+The distinction is the **axes used to calculate statistics**, not simply which one has “better normalization.”
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/batch-vs-layer-norm.png"><img src="/assets/images/transformer-internship/batch-vs-layer-norm.png" alt="A conceptual comparison of normalization axes; the article specifies the sequence layouts explicitly." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 42 from our presentation. A conceptual comparison of normalization axes; the article specifies the sequence layouts explicitly. Open the image for a larger view.</figcaption>
+</figure>
+
+| Question | Typical Transformer LayerNorm | BatchNorm1d on `[B, D, S]` |
+| --- | --- | --- |
+| What is normalized together? | Features of one token | Batch and sequence positions for each channel |
+| Does one example affect another’s statistics? | No | Yes, during training |
+| What statistics are used at inference? | Those of the current token | Running estimates by default |
+| Are padding and variable sequence lengths a concern? | Feature normalization does not pool across tokens | Naively pooling across positions can include padding |
+
+The slide is a conceptual comparison; the table specifies the sequence tensor layouts used here. The behavior is documented in [PyTorch’s LayerNorm](https://docs.pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html) and [BatchNorm1d](https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm1d.html) references.
+
+#### Post-norm versus pre-norm
+
+The original architecture applies normalization after a residual addition:
+
+$$
+\begin{aligned} \text{Post-norm:}\quad y &= \operatorname{LN}(x+F(x)) \\ \text{Pre-norm:}\quad y &= x+F(\operatorname{LN}(x)) \end{aligned}
+$$
+
+Pre-norm leaves the residual stream outside that sublayer’s normalization, changing the gradient route. It is a different arrangement, not merely moving the same operation without consequence. A complete model may also have a final normalization.
+
+For the original encoder, the high-level flow is:
+
+$$
+\begin{aligned} u &= \operatorname{LN}\bigl(x+\operatorname{Dropout}(\operatorname{SelfAttention}(x))\bigr) \\ y &= \operatorname{LN}\bigl(u+\operatorname{Dropout}(\operatorname{FFN}(u))\bigr) \end{aligned}
+$$
+
+Dropout regularizes training by randomly zeroing selected activations; it is disabled for ordinary evaluation. It is not a substitute for a causal mask. Other dropout placements also appear in the complete model.
+
+<h2 id="decoder">5. Inside the decoder: two different attention problems</h2>
+
+### Masked self-attention prevents looking at future targets
+
+During training, a decoder can process many target positions together. But a position must use only the target information that would be available when generating that prediction.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/causal-mask.png"><img src="/assets/images/transformer-internship/causal-mask.png" alt="Masked attention blocks access to later target positions." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 58 from our presentation. Masked attention blocks access to later target positions. Open the image for a larger view.</figcaption>
+</figure>
+
+For four positions, a causal attention mask allows the lower triangle, including the diagonal:
+
+```text
+              Key position
+              1  2  3  4
+Query 1       ✓  ✗  ✗  ✗
+Query 2       ✓  ✓  ✗  ✗
+Query 3       ✓  ✓  ✓  ✗
+Query 4       ✓  ✓  ✓  ✓
+```
+
+A simple teacher-forcing example is:
+
+```text
+Decoder input:  <BOS>   I    love    AI
+Training label:   I    love   AI    <EOS>
+```
+
+The representation at `love` helps predict `AI`; it must not attend to the later input `AI`, which would reveal its label. The attention mask enforces this while preserving parallel computation across training positions. Padding masks exclude padding for a separate reason.
+
+During generation, the next token is appended to the prefix and used for the next prediction. The causal information boundary is therefore compatible with both parallel teacher-forced training and sequential inference.
+
+### Cross-attention connects the target to the source
+
+Self-attention takes queries, keys, and values from the same sequence. In the original decoder’s cross-attention, queries come from its current target-side states, while keys and values come from encoder outputs.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/cross-attention.png"><img src="/assets/images/transformer-internship/cross-attention.png" alt="Decoder queries interact with keys and values derived from the encoder output." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 52 from our presentation. Decoder queries interact with keys and values derived from the encoder output. Open the image for a larger view.</figcaption>
+</figure>
+
+$$
+\begin{aligned} Q &= X_{\mathrm{decoder}}W_Q \\ K &= X_{\mathrm{encoder}}W_K \\ V &= X_{\mathrm{encoder}}W_V \end{aligned}
+$$
+
+For one head, the scores now have shape `[B, T, S]`, not necessarily a square matrix. Each target position chooses a mixture of source-side values. For translation, this creates a route from a partially generated target sentence to relevant source information.
+
+Source padding is masked, but there is ordinarily no causal restriction across valid source positions: the source sentence is already available. Cross-attention is also not exclusive to translation; the same distinction applies whenever queries and the key/value memory come from different representation sets.
+
+A high-level original decoder layer is:
+
+$$
+\begin{aligned} u &= \operatorname{LN}\bigl(x+\operatorname{Dropout}(\operatorname{CausalSelfAttention}(x))\bigr) \\ v &= \operatorname{LN}\bigl(u+\operatorname{Dropout}(\operatorname{CrossAttention}(u,X_{\mathrm{encoder}}))\bigr) \\ y &= \operatorname{LN}\bigl(v+\operatorname{Dropout}(\operatorname{FFN}(v))\bigr) \end{aligned}
+$$
+
+GPT-style decoder-only models omit the separate encoder–decoder cross-attention stage. The word “decoder” alone does not tell you whether a model has cross-attention; inspect the actual architecture.
+
+<h2 id="temperature">6. The output head, softmax, and temperature</h2>
+
+After the decoder stack, a linear projection maps each target representation to vocabulary-sized logits. Those scores are not probabilities yet.
+
+For positive temperature $\tau$:
+
+$$
+p_i = \frac{\exp(z_i/\tau)}{\sum_j \exp(z_j/\tau)},\qquad \tau>0
+$$
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/temperature-high.png"><img src="/assets/images/transformer-internship/temperature-high.png" alt="Changing temperature changes the shape of a softmax distribution." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 63 from our presentation. Changing temperature changes the shape of a softmax distribution. Open the image for a larger view.</figcaption>
+</figure>
+
+Here is a small worked example using logits `[2, 1, 0]`:
+
+| Temperature | Approximate probabilities |
+| --- | --- |
+| `0.5` | `[0.867, 0.117, 0.016]` |
+| `1.0` | `[0.665, 0.245, 0.090]` |
+| `2.0` | `[0.506, 0.307, 0.186]` |
+
+A lower positive temperature concentrates probability on high-scoring choices; a higher temperature spreads it out. Sampling from those distributions changes which continuations can be selected. It does not change which token has the largest logit, and making a distribution sharper does not make the answer more correct.
+
+At zero temperature, practical interfaces usually choose a greedy-decoding convention rather than literally dividing by zero. During standard next-token training, cross-entropy is typically computed directly from logits using a numerically stable implementation.
+
+**Attention softmax and output softmax have different jobs.** Attention normalizes over key positions to mix values. Output softmax normalizes over vocabulary items to support token prediction. The attention scale $1/\sqrt{d_k}$ is not the same setting as a user-controlled generation temperature.
+
+<h2 id="kv-cache">7. KV caching: reuse computation, understand the memory bill</h2>
+
+KV caching belongs here because it primarily accelerates **autoregressive inference**, rather than being an encoder block or a way to train longer sequences for free. Hugging Face’s [caching explanation](https://huggingface.co/docs/transformers/cache_explanation) describes the underlying reuse.
+
+Without caching, a straightforward generation loop repeatedly runs the entire growing prefix. Yet in a causal model, adding a future token does not change an old position’s earlier representation. Its projected keys and values can therefore be reused.
+
+There are two useful phases:
+
+1. **Prefill:** process the prompt and populate each layer’s cache.
+2. **Decode:** process the next input token, append its new keys and values, and use its query to attend to cached and current positions.
+
+```text
+Old cache:   K₁ … Kₜ₋₁     V₁ … Vₜ₋₁
+New token:       Kₜ             Vₜ       plus query Qₜ
+Append:      K₁ … Kₜ       V₁ … Vₜ
+Attend:      Qₜ against all available keys → mix their values
+```
+
+Past queries are not needed to compute the current token’s attention output. Each layer has its own cache. In an encoder–decoder model, projected source keys and values for cross-attention can also be reused while the source stays fixed.
+
+### Caching uses memory to avoid recomputation
+
+The cache grows with context length. For a standard dense cache, an approximate storage calculation is:
+
+$$
+\text{KV bytes} \approx 2BLT H_{\mathrm{KV}}d_{\mathrm{head}} \cdot \text{bytes per element}
+$$
+
+`2` accounts for keys and values, `L` is the layer count, and $H_{\mathrm{KV}}$ is the number of key/value heads. It equals the query-head count for ordinary multi-head attention, but can differ for grouped-query arrangements.
+
+As a worked example, take `B=1`, `L=32`, `T=4096`, `H_KV=32`, `d_head=128`, and 2-byte elements. That is **2 GiB of KV tensors alone**, excluding weights, temporary tensors, and allocator overhead. Keeping the other values fixed while using 8 KV heads would give 512 MiB; that requires a compatible architecture, not simply deleting heads at runtime.
+
+A new query still attends over the available cached prefix. Caching does not make full-context decoding constant-cost or remove all long-sequence computation.
+
+### What actually reduces cache memory?
+
+[Cache strategies](https://huggingface.co/docs/transformers/kv_cache) offer trade-offs: quantization stores lower-precision KV data, while offloading moves storage between devices. Both can affect latency, and quantization can affect numerical behavior. Dynamic allocation grows with demand; static allocation reserves capacity and can support compilation, but may reserve unused space. Sliding-window caches bound memory only for layers designed to use a limited window, not arbitrary full-attention layers.
+
+The practical question is whether you are constrained by model weights, KV storage, temporary attention tensors, or compute. Those are different bottlenecks.
+
+<h2 id="position">8. Positional encoding: why position matters, and what RoPE changes</h2>
+
+### Why attention needs position information
+
+Imagine rearranging the tokens in “the dog chased the cat.” The same words in a different order can express a different relationship. A content-only self-attention operation has no built-in token index: permuting its input rows correspondingly permutes its outputs. That symmetry is insufficient when sequence order matters.
+
+A causal mask provides a directional constraint, but it is not the same thing as an explicit, expressive position representation.
+
+### Original sinusoidal encoding
+
+The slides introduce position through patterns at multiple frequencies. Binary counting is a useful visual analogy: different coordinates change on different scales. Sinusoids provide a smooth version of that idea.
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/binary-position.png"><img src="/assets/images/transformer-internship/binary-position.png" alt="Binary patterns are an analogy for representing position at several scales." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 14 from our presentation. Binary patterns are an analogy for representing position at several scales. Open the image for a larger view.</figcaption>
+</figure>
+
+For position `p` and dimension pair indexed by `i`, the original construction is:
+
+$$
+\begin{aligned} \operatorname{PE}(p,2i) &= \sin\!\left(\frac{p}{10000^{2i/D}}\right) \\ \operatorname{PE}(p,2i+1) &= \cos\!\left(\frac{p}{10000^{2i/D}}\right) \end{aligned}
+$$
+
+<figure class="article-figure">
+  <a href="/assets/images/transformer-internship/sinusoidal-position.png"><img src="/assets/images/transformer-internship/sinusoidal-position.png" alt="Sine and cosine signals give different coordinates different positional frequencies." loading="lazy" width="1500" height="844"></a>
+  <figcaption>Slide 12 from our presentation. Sine and cosine signals give different coordinates different positional frequencies. Open the image for a larger view.</figcaption>
+</figure>
+
+The position vector is added to the token representation. Different frequencies let coordinates vary over different distance scales. This method is deterministic and can be evaluated at indices beyond those used during training.
+
+### What is limited about adding an absolute position vector?
+
+It is too strong to say that sinusoidal encoding is now simply “bad.” It remains a valid design, and the formula has no fixed learned-table boundary. But being able to calculate an encoding at position 50,000 does not establish that a model trained on much shorter sequences will use it well.
+
+With additive absolute encodings, attention combines content with position through the learned projections. Relative displacement must be expressed through those interactions rather than built directly into the score’s geometry. A learned absolute-position table has a separate issue: indices beyond its configured range require an extension strategy.
+
+Those are reasons to examine alternatives, not proof that one alternative wins on every task.
+
+### RoPE places position inside query–key comparisons
+
+[RoPE, introduced in RoFormer](https://arxiv.org/abs/2104.09864), rotates pairs of query and key coordinates by angles determined by their positions and frequencies. For a two-coordinate pair:
+
+$$
+R(\theta) = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix}
+$$
+
+Different coordinate pairs use different frequencies. In a common full-head construction, pair `i` uses $\omega_i=\mathrm{base}^{-2i/d_k}$, and position `p` gives rotation angle $p\omega_i$. The original construction uses base 10,000; implementations can choose other bases or scaling schemes. Applying these small rotations across the coordinate pairs forms the full rotation $R_p$.
+
+Let the unrotated query be at position `m` and the key at `n`:
+
+$$
+\begin{aligned} \widetilde q_m &= R_m q_m, \qquad \widetilde k_n = R_n k_n \\ \widetilde q_m^{\mathsf T}\widetilde k_n &= q_m^{\mathsf T}R_m^{\mathsf T}R_n k_n \\ &= q_m^{\mathsf T}R_{n-m}k_n \end{aligned}
+$$
+
+The last equality exposes relative displacement in the score. Standard RoPE applies these rotations to queries and keys; values need not be rotated. It provides a relative-position structure without adding a separate bias for every token pair.
+
+RoPE does **not** guarantee useful extrapolation to arbitrary lengths, eliminate dense attention’s quadratic pairwise work, or replace a causal mask. Position scaling and longer-context training still need evaluation. With a cache, keys normally keep their applied rotary positions, and new tokens must use continuing position indices rather than restart at zero.
+
+### One pass through the complete model
+
+To connect the pieces, the original encoder–decoder flow is: embed and position the source; contextualize it with encoder attention and FFNs; embed the shifted target; apply causal target attention; retrieve source information through cross-attention; transform the features; and project to vocabulary scores.
+
+At inference, a decoding rule selects the next token and repeats that process, with caching where supported. No single block does all the work: attention exchanges information, FFNs transform features, residual paths and normalization support optimization, position schemes represent order, and the output head defines prediction scores.
+
+That is the explanation I want to be able to give—not only the names of boxes, but the computation and constraints behind each one.
+
+<h2 id="internship">9. What changed after I started the internship</h2>
 
 After joining as an AI Engineer Intern, I realized that knowing ML, deep learning, and LLMs was not enough. I also needed a stronger understanding of the software around them.
 
-The areas that stood out were **multi-agent workflows, APIs, deployment, and Docker**. They connect model behavior to an application that someone else can run, inspect, and maintain.
+The areas that stood out were **Multi-agent workflows, APIs, Deployment, ...**. They connect model behavior to an application that someone else can run, inspect, and maintain.
 
 For me, software engineering means learning to make those connections explicit:
 
@@ -218,3 +593,8 @@ Learning Transformers helped me reach my first internship. Starting that interns
 - [Thiên An’s notes and website](https://tawannt.github.io/).
 - [Vaswani et al., *Attention Is All You Need*](https://arxiv.org/pdf/1706.03762), 2017.
 - [Su et al., *RoFormer: Enhanced Transformer with Rotary Position Embedding*](https://arxiv.org/abs/2104.09864), 2021.
+
+- [PyTorch RNN documentation](https://docs.pytorch.org/docs/stable/generated/torch.nn.RNN.html) and [LSTM documentation](https://docs.pytorch.org/docs/stable/generated/torch.nn.LSTM.html).
+- [He et al., *Deep Residual Learning for Image Recognition*](https://arxiv.org/abs/1512.03385), 2015.
+- [PyTorch LayerNorm](https://docs.pytorch.org/docs/stable/generated/torch.nn.LayerNorm.html) and [BatchNorm1d](https://docs.pytorch.org/docs/stable/generated/torch.nn.BatchNorm1d.html) reference pages.
+- [Hugging Face: how caching works](https://huggingface.co/docs/transformers/cache_explanation) and [cache strategies](https://huggingface.co/docs/transformers/kv_cache).

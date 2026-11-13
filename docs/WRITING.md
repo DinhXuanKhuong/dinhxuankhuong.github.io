@@ -45,6 +45,20 @@ When you set `draft: false`, it appears at `/posts/2026-11-11-my-learning-note.h
 
 Use fenced code blocks (three backticks, optionally followed by a language such as `python`). Template syntax such as `{{ example }}` inside Markdown is left untouched. Code blocks use a readable monospace style without a syntax-highlighting dependency.
 
+## Equations
+
+Add `math: true` to a post's front matter to load the math stylesheet. Use LaTeX notation with single dollar signs for inline math and double dollar signs on separate lines for display equations:
+
+```markdown
+The key dimension is $d_k$.
+
+$$
+\operatorname{Attention}(Q,K,V) = \operatorname{softmax}\left(\frac{QK^{\mathsf T}}{\sqrt{d_k}}\right)V
+$$
+```
+
+KaTeX renders equations during the build, including accessible MathML. Fonts and styles are served locally; visitors do not need JavaScript for the equations. Invalid formulas stop the build so you can fix them before publishing. Keep programming examples in backticks or fenced code blocks; these are not rendered as math. Escape a literal dollar sign as `\$` when needed.
+
 ## Poem
 
 Create `src/content/poems/2026-11-11-ten-bai-tho.md`:

@@ -775,6 +775,38 @@ footer small {
   margin:30px 0;
 }
 
+.reading .article-toc {
+  display:block;
+  margin:30px 0;
+  padding:22px 24px;
+  border:1px solid var(--rule);
+  background:var(--tint);
+}
+
+.reading .article-toc p {
+  margin:0 0 10px;
+}
+
+.reading .article-toc ol {
+  margin:0;
+  padding-left:24px;
+}
+
+.reading .article-toc li {
+  padding:3px 0;
+}
+
+.reading .article-toc a {
+  padding:0;
+  border:0;
+  font:inherit;
+  white-space:normal;
+}
+
+.reading h2[id] {
+  scroll-margin-top:24px;
+}
+
 .article-figure img {
   display:block;
   width:100%;
@@ -789,15 +821,25 @@ footer small {
   padding-top:9px;
 }
 
-.reading .math-block {
+.reading .katex-display {
   max-width:100%;
   overflow-x:auto;
   margin:24px 0;
   padding:18px;
   background:var(--tint);
   border:1px solid var(--rule);
-  font:14px/1.8 var(--mono);
-  white-space:nowrap;
+  overflow-y:hidden;
+  font-size:0.95em;
+}
+
+.reading .katex-display > .katex {
+  display:block;
+  width:max-content;
+  min-width:100%;
+}
+
+.reading .katex {
+  font-size:1.1em;
 }
 
 .reading table {
